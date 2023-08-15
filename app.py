@@ -25,7 +25,6 @@ if classify_button:
     img = np.array(img_data)
     greyscale = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     input_image_resized = cv2.resize(greyscale, (28,28))
-    input_image_resized = input_image_resized/255
     input_reshape = np.reshape(input_image_resized, [1,28,28])
     #predict_image = preprocessing(img)
 
