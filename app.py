@@ -11,7 +11,7 @@ st.title("Handwritten Digit Classifier")
 # Create a canvas for drawing
 canvas = st_canvas(
     fill_color="black",
-    stroke_width=20,
+    stroke_width=10,
     stroke_color="#FFFFFF",
     background_color="#000000",
     width=280,
