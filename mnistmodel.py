@@ -1,34 +1,47 @@
 import numpy as np
-import cv2
 import tensorflow as tf
-tf.random.set_seed(3)
-from tensorflow import keras
 from keras.datasets import mnist
-from keras.optimizers import SGD
+from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from keras.optimizers import Adam
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 
-
-#train test split
+# Load and preprocess the MNIST dataset
 (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
+X_train = np.expand_dims(X_train, axis=-1) / 255.0
+X_test = np.expand_dims(X_test, axis=-1) / 255.0
 
-#The values will now range between 0-1(scaling)
-X_train = X_train/255   
-X_test = X_test/255
-
-#setting up the layers of the neural network
-model = keras.Sequential([
-    keras.layers.Flatten(input_shape = (28,28)),
-    keras.layers.Dense(128, activation = 'relu'),
-    keras.layers.Dropout(0.2),
-    keras.layers.Dense(64, activation = 'relu'),
-    keras.layers.Dropout(0.2),
-    keras.layers.Dense(10, activation = 'softmax')
+# Build the improved CNN model
+model = Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)),
+    MaxPooling2D((2, 2)),
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dropout(0.5),
+    Dense(10, activation='softmax')
 ])
 
-#compiling the model
-model.compile(optimizer = SGD(learning_rate = 0.01, momentum=0.9), loss = 'sparse_categorical_crossentropy', metrics = ['accuracy'])
+# Compile the model with Adam optimizer
+model.compile(optimizer=Adam(learning_rate=0.001),
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
 
-model.fit(X_train, Y_train, epochs=10)
+# Implement early stopping and model checkpoint
+early_stopping = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
+model_checkpoint = ModelCheckpoint('BestModel.h5', save_best_only=True)
 
-Y_pred = model.predict(X_test)
+# Train the model
+history = model.fit(X_train, Y_train,
+                    epochs=20,
+                    batch_size=64,
+                    validation_data=(X_test, Y_test),
+                    callbacks=[early_stopping, model_checkpoint])
 
-model.save("DigitRecognition.h5")
+# Load the best model
+model.load_weights('BestModel.h5')
+
+# Evaluate the model
+test_loss, test_acc = model.evaluate(X_test, Y_test)
+print(f"Test accuracy: {test_acc:.4f}")
